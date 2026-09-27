@@ -1,6 +1,4 @@
-﻿using System.Runtime.InteropServices;
-
-namespace NumSysCalc;
+﻿namespace NumSysCalc;
 
 class Program
 {
@@ -15,7 +13,9 @@ class Program
 
     private static string GetString(string prompt)
     {
+        Console.ForegroundColor = ConsoleColor.DarkGray;
         Console.Write(prompt);
+        Console.ResetColor();
         string? input = Console.ReadLine();
         if (input is null) return "0";
         return input;
@@ -43,21 +43,32 @@ class Program
         return targetBase;
     }
 
+    public static string? DecimalToBase(string inputNumber, int baseTo)
+    {
+        Stack<char> stack = [];
+        if (!int.TryParse(inputNumber, out int number)) return null;
+        if (new[] { 2, 8, 16 }.Contains(baseTo))
+            return Convert.ToString(number, baseTo);
+        while (number != 0)
+        {
+            char num = alphabet[number % baseTo];
+            stack.Push(num);
+            number /= baseTo;
+        }
+        return new string(stack.ToArray());
+    }
+
+    public static string BaseToDecimal(string inputNumber, int baseFrom)
+    {
+        int result;
+        return "";
+    }
+
     public static string? ConvertBases(string inputNumber, int baseFrom, int baseTo)
     {
-        List<char> targetNumber = [];
         string? result = null;
         if (baseFrom == 10)
-        {
-            if (!int.TryParse(inputNumber, out int number)) return null;
-            while (number != 0)
-            {
-                char num = alphabet[number % baseTo];
-                targetNumber.Add(num);
-                number /= baseTo;
-            }
-            result = CollectionsMarshal.AsSpan(targetNumber).ToString();
-        }
+            result = DecimalToBase(inputNumber, baseTo);
 
         return result;
     }
