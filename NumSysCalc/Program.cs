@@ -1,9 +1,9 @@
-﻿namespace NumSysCalc;
+﻿// TODO: Вывод подробной инструкции расчётов
+
+namespace NumSysCalc;
 
 class Program
 {
-    public const string alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
     private static void PrintError(string message)
     {
         Console.ForegroundColor = ConsoleColor.Red;
@@ -32,59 +32,142 @@ class Program
         }
     }
 
+    private static bool TryConvertCharToInt(char c, out int value)
+    {
+        if (c >= '0' && c <= '9')
+        {
+            value = c - '0';
+            return true;
+        }
+        if (c >= 'A' && c <= 'Z')
+        {
+            value = c - 'A' + 10;
+            return true;
+        }
+        if (c >= 'a' && c <= 'z')
+        {
+            value = c - 'a' + 10;
+            return true;
+        }
+
+        value = 0;
+        return false;
+    }
+
     private static int DetermineBase(string number)
     {
-        int targetBase = 0;
-        foreach (char i in number)
+        if (string.IsNullOrWhiteSpace(number))
+            throw new ArgumentException("String cannot be empty", nameof(number));
+
+        int maxDigitValue = 0;
+        foreach (char c in number)
         {
-            int index = alphabet.IndexOf(i);
-            if (index > targetBase) targetBase = index + 1;
+            if (!TryConvertCharToInt(c, out int value))
+                continue;
+            if (value > maxDigitValue) maxDigitValue = value;
         }
-        return targetBase;
+        int targetBase = maxDigitValue + 1;
+        return targetBase < 2 ? 2 : targetBase;
     }
 
-    public static string? DecimalToBase(string inputNumber, int baseTo)
+    public static bool TryConvertDecimalToBase(long number, int toBase, out string result)
     {
-        Stack<char> stack = [];
-        if (!int.TryParse(inputNumber, out int number)) return null;
-        if (new[] { 2, 8, 16 }.Contains(baseTo))
-            return Convert.ToString(number, baseTo);
-        while (number != 0)
+        if (toBase == 2 || toBase == 8 || toBase == 10 || toBase == 16)
         {
-            char num = alphabet[number % baseTo];
-            stack.Push(num);
-            number /= baseTo;
+            result = Convert.ToString(number, toBase);
+            return true;
         }
-        return new string(stack.ToArray());
+        if (number == 0)
+        {
+            result = "0";
+            return true;
+        }
+
+        bool isNegative = number < 0;
+        ulong remaining = isNegative ? (ulong)-number : (ulong)number;
+
+        // Максимальная длина для 64-битного числа в двоичной системе - 64 символа + 1 знак
+        Span<char> buffer = stackalloc char[65];
+        int index = buffer.Length;
+
+        while (remaining > 0)
+        {
+            uint digit = (uint)(remaining % (ulong)toBase);
+            buffer[--index] = (char)(digit < 10 ? '0' + digit : 'A' + (digit - 10));
+            remaining /= (ulong)toBase;
+        }
+
+        if (isNegative)
+            buffer[--index] = '-';
+
+        result = new string(buffer[index..]);
+        return true;
     }
 
-    public static string BaseToDecimal(string inputNumber, int baseFrom)
+    public static bool TryConvertBaseToDecimal(string number, int fromBase, out long result)
     {
-        int result;
-        return "";
+        result = 0;
+
+        foreach (char c in number)
+        {
+            if (!TryConvertCharToInt(c, out int value))
+                return false;
+            if (value >= fromBase)
+                return false;
+            try
+            {
+                checked
+                {
+                    // Метод Горнера: вместо возведения в степень умножаем текущий результат на основание
+                    result = result * fromBase + value;
+                }
+            }
+            catch (OverflowException)
+            {
+                result = 0;
+                return false;
+            }
+        }
+
+        return true;
     }
 
-    public static string? ConvertBases(string inputNumber, int baseFrom, int baseTo)
+    public static bool ConvertBases(string inputNumber, int fromBase, int toBase, out string result)
     {
-        string? result = null;
-        if (baseFrom == 10)
-            result = DecimalToBase(inputNumber, baseTo);
+        if (fromBase < 2 || fromBase > 36)
+            throw new ArgumentOutOfRangeException(nameof(fromBase), fromBase, "The base of the numeral system must be between 2 and 36");
+        if (toBase < 2 || toBase > 36)
+            throw new ArgumentOutOfRangeException(nameof(toBase), toBase, "The base of the numeral system must be between 2 and 36");
 
-        return result;
+        bool success;
+        if (fromBase == 10)
+        {
+            success = long.TryParse(inputNumber, out long number);
+            success = TryConvertDecimalToBase(number, toBase, out result) && success;
+        }
+        else if (toBase == 10)
+        {
+            success = TryConvertBaseToDecimal(inputNumber, fromBase, out long number);
+            result = number.ToString();
+        }
+        else
+        {
+            success = TryConvertBaseToDecimal(inputNumber, fromBase, out long number);
+            success = TryConvertDecimalToBase(number, toBase, out result) && success;
+        }
+
+        return success;
     }
 
     public static void Main()
     {
         string inputNumber = GetString("Enter your number: ").ToUpper();
         int targetBase = DetermineBase(inputNumber);
-        int baseFrom = GetNumber("Enter the first base of the numeral system: ");
-        if (baseFrom < targetBase)
-        {
-            PrintError($"The entered number {inputNumber}, which has a minimum numeral system base of {targetBase}, cannot be represented in the numeral system with the base {baseFrom}");
-            return;
-        }
-        int baseTo = GetNumber("Enter the second base of the numeral system: ");
-        string? targetNumber = ConvertBases(inputNumber, baseFrom, baseTo);
-        Console.WriteLine(targetNumber);
+        int fromBase = GetNumber("Enter the first base of the numeral system: ");
+        if (fromBase < targetBase)
+            throw new ArgumentException($"The entered number {inputNumber}, which has a minimum numeral system base of {targetBase}, cannot be represented in the numeral system with the base {fromBase}", nameof(inputNumber));
+        int toBase = GetNumber("Enter the second base of the numeral system: ");
+        if (ConvertBases(inputNumber, fromBase, toBase, out string targetNumber))
+            Console.WriteLine(targetNumber);
     }
 }
