@@ -1,6 +1,4 @@
-﻿// TODO: Вывод подробной инструкции расчётов
-
-namespace NumSysCalc;
+﻿namespace NumSysCalc;
 
 class Program
 {
@@ -28,11 +26,11 @@ class Program
             string input = GetString(prompt);
             bool success = int.TryParse(input, out int result);
             if (success) return result;
-            PrintError("The entered value is not a number. Please try again");
+            PrintError("Введённое значение не является числом. Пожалуйста, попробуйте ещё раз");
         }
     }
 
-    private static bool TryConvertCharToInt(char c, out int value)
+    internal static bool TryConvertCharToInt(char c, out int value)
     {
         if (c >= '0' && c <= '9')
         {
@@ -54,10 +52,10 @@ class Program
         return false;
     }
 
-    private static int DetermineBase(string number)
+    internal static int DetermineBase(string number)
     {
         if (string.IsNullOrWhiteSpace(number))
-            throw new ArgumentException("String cannot be empty", nameof(number));
+            throw new ArgumentException("Строка не может быть пустой", nameof(number));
 
         int maxDigitValue = 0;
         foreach (char c in number)
@@ -72,11 +70,6 @@ class Program
 
     public static bool TryConvertDecimalToBase(long number, int toBase, out string result)
     {
-        if (toBase == 2 || toBase == 8 || toBase == 10 || toBase == 16)
-        {
-            result = Convert.ToString(number, toBase);
-            return true;
-        }
         if (number == 0)
         {
             result = "0";
@@ -135,9 +128,9 @@ class Program
     public static bool ConvertBases(string inputNumber, int fromBase, int toBase, out string result)
     {
         if (fromBase < 2 || fromBase > 36)
-            throw new ArgumentOutOfRangeException(nameof(fromBase), fromBase, "The base of the numeral system must be between 2 and 36");
+            throw new ArgumentOutOfRangeException(nameof(fromBase), fromBase, "Основание системы счисления должно быть от 2 до 36 включительно");
         if (toBase < 2 || toBase > 36)
-            throw new ArgumentOutOfRangeException(nameof(toBase), toBase, "The base of the numeral system must be between 2 and 36");
+            throw new ArgumentOutOfRangeException(nameof(toBase), toBase, "Основание системы счисления должно быть от 2 до 36 включительно");
 
         bool success;
         if (fromBase == 10)
@@ -161,13 +154,23 @@ class Program
 
     public static void Main()
     {
-        string inputNumber = GetString("Enter your number: ").ToUpper();
+        string inputNumber = GetString("Введите число: ").ToUpper();
         int targetBase = DetermineBase(inputNumber);
-        int fromBase = GetNumber("Enter the first base of the numeral system: ");
+        int fromBase = GetNumber($"Введите основание системы счисления исходного числа (минимум {targetBase}): ");
         if (fromBase < targetBase)
-            throw new ArgumentException($"The entered number {inputNumber}, which has a minimum numeral system base of {targetBase}, cannot be represented in the numeral system with the base {fromBase}", nameof(inputNumber));
-        int toBase = GetNumber("Enter the second base of the numeral system: ");
+            throw new ArgumentException($"Введённое число {inputNumber}, которое имеет минимальное основание {targetBase}, не может быть представлено в системе счисления с основанием {fromBase}", nameof(inputNumber));
+        int toBase = GetNumber("Введите основание системы счисления конечного числа: ");
         if (ConvertBases(inputNumber, fromBase, toBase, out string targetNumber))
-            Console.WriteLine(targetNumber);
+        {
+            Console.WriteLine($"Результат: {targetNumber}");
+
+            string answer = GetString("Показать подробное решение? (y/n): ");
+            if (answer.Trim().Equals("y", StringComparison.OrdinalIgnoreCase))
+            {
+                Console.WriteLine();
+                foreach (string line in ConversionExplainer.Explain(inputNumber, fromBase, toBase))
+                    Console.WriteLine(line);
+            }
+        }
     }
 }
