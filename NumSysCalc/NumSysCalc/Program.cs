@@ -1,6 +1,6 @@
 ﻿namespace NumSysCalc;
 
-class Program
+public static class Program
 {
     private static void PrintError(string message)
     {
@@ -11,7 +11,7 @@ class Program
 
     private static string GetString(string prompt)
     {
-        Console.ForegroundColor = ConsoleColor.DarkGray;
+        Console.ForegroundColor = ConsoleColor.DarkGreen;
         Console.Write(prompt);
         Console.ResetColor();
         string? input = Console.ReadLine();
@@ -154,6 +154,9 @@ class Program
 
     public static void Main()
     {
+        Console.InputEncoding = System.Text.Encoding.UTF8;
+        Console.OutputEncoding = System.Text.Encoding.UTF8;
+
         string inputNumber = GetString("Введите число: ").ToUpper();
         int targetBase = DetermineBase(inputNumber);
         int fromBase = GetNumber($"Введите основание системы счисления исходного числа (минимум {targetBase}): ");
@@ -162,10 +165,20 @@ class Program
         int toBase = GetNumber("Введите основание системы счисления конечного числа: ");
         if (ConvertBases(inputNumber, fromBase, toBase, out string targetNumber))
         {
-            Console.WriteLine($"Результат: {targetNumber}");
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.Write("Результат: ");
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.Write(targetNumber);
+            Console.ResetColor();
+            Console.WriteLine();
 
-            string answer = GetString("Показать подробное решение? (y/n): ");
-            if (answer.Trim().Equals("y", StringComparison.OrdinalIgnoreCase))
+            ReadOnlySpan<char> answer = GetString("Показать подробное решение? (y/n): ").AsSpan().Trim();
+            if (
+                answer.Equals("y", StringComparison.OrdinalIgnoreCase) ||
+                answer.Equals("yes", StringComparison.OrdinalIgnoreCase) ||
+                answer.Equals("д", StringComparison.OrdinalIgnoreCase) ||
+                answer.Equals("да", StringComparison.OrdinalIgnoreCase)
+            )
             {
                 Console.WriteLine();
                 foreach (string line in ConversionExplainer.Explain(inputNumber, fromBase, toBase))

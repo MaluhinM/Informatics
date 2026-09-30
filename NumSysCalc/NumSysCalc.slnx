@@ -1,2 +1,4 @@
 <Solution>
+  <Project Path="NumSysCalc.Tests/NumSysCalc.Tests.csproj" />
+  <Project Path="NumSysCalc/NumSysCalc.csproj" />
 </Solution>
