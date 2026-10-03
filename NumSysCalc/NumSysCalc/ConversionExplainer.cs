@@ -45,6 +45,13 @@ public static class ConversionExplainer
         yield return "Каждую цифру умножаем на основание в степени её позиции " +
                      "(справа налево, начиная с 0) и складываем результаты:";
 
+        bool isNegative = number[0] == '-';
+        if (isNegative)
+        {
+            number = number.Remove(0, 1);
+            yield return "Число отричательное: переводим его модуль, знак «-» припишем в конце.";
+        }
+
         BigInteger total = 0;
         List<BigInteger> terms = [];
 
@@ -64,7 +71,10 @@ public static class ConversionExplainer
             yield return $"  {digitText} × {fromBase}^{power} = {digit} × {weight} = {term}";
         }
 
-        yield return $"Сумма: {string.Join(" + ", terms)} = {total}";
+        if (isNegative)
+            yield return $"Сумма: -({string.Join(" + ", terms)}) = -{total}";
+        else
+            yield return $"Сумма: {string.Join(" + ", terms)} = {total}";
     }
 
     private static IEnumerable<string> ExplainFromDecimal(long number, int toBase)

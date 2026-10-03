@@ -101,8 +101,22 @@ public static class Program
     {
         result = 0;
 
-        foreach (char c in number)
+        bool isNegative = false;
+        for (int i = 0; i < number.Length; i++)
         {
+            char c = number[i];
+            if (c == '-')
+            {
+                if (i == 0)
+                {
+                    isNegative = true;
+                    continue;
+                }
+                else
+                {
+                    return false;
+                }
+            }
             if (!TryConvertCharToInt(c, out int value))
                 return false;
             if (value >= fromBase)
@@ -122,6 +136,8 @@ public static class Program
             }
         }
 
+        if (isNegative)
+            result *= -1;
         return true;
     }
 
