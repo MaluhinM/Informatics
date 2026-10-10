@@ -188,7 +188,7 @@ public static class Program
             Console.ResetColor();
             Console.WriteLine();
 
-            ReadOnlySpan<char> answer = GetString("Показать подробное решение? (y/n): ").AsSpan().Trim();
+            ReadOnlySpan<char> answer = GetString("Показать подробное решение? (y/N): ").AsSpan().Trim();
             if (
                 answer.Equals("y", StringComparison.OrdinalIgnoreCase) ||
                 answer.Equals("yes", StringComparison.OrdinalIgnoreCase) ||
