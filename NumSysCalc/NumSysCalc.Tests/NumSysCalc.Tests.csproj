@@ -20,4 +20,8 @@
     <Using Include="NUnit.Framework" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\NumSysCalc\NumSysCalc.csproj" />
+  </ItemGroup>
+
 </Project>
